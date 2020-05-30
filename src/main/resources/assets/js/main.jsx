@@ -28,7 +28,7 @@ var PT = PropTypes;
 The FCS Aggregator UI is based on reactjs.
 - index.html: describes the general page structure, with a push-down footer;
   on that structure the Main and Footer components are plugged.
-- main.jsx: composes the simple top components (Main, AggregatorPage, HelpPage, 
+- main.jsx: composes the simple top components (Main, AggregatorPage, HelpPage,
   AboutPage, StatisticsPage) in pages/
 - pages/aggregatorpage.jsx: defines
 	- the Corpora store of collections
@@ -154,10 +154,16 @@ var Main = createReactClass({
 	toEmbedded: function(doPushHistory) { this.gotoPage(doPushHistory, 'embed'); },
 
 	renderLogin: function() {
-		return false;
-		// return  <li className="unauthenticated">
-		// 			<a href="login" tabIndex="-1"><span className="glyphicon glyphicon-log-in"></span> LOGIN</a>
-		// 		</li>;
+		// https://catalog.clarin.eu/Shibboleth.sso/Login
+		return  <li className="unauthenticated">
+		 			<a href="login" tabIndex="-1"><span className="glyphicon glyphicon-log-in"></span> LOGIN</a>
+		 		</li>;
+	},
+
+	renderLogout: function() {
+		return  <li className="authenticated">
+		 			<a href="https://catalog.clarin.eu/Shibboleth.sso/Logout" tabIndex="-1"><span className="glyphicon glyphicon-log-out"></span> LOGOUT</a>
+		 		</li>;
 	},
 
 	renderCollapsible: function() {

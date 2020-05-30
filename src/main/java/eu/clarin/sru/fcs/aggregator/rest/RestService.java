@@ -1,10 +1,12 @@
 package eu.clarin.sru.fcs.aggregator.rest;
 
+import com.google.common.base.Strings;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import eu.clarin.sru.client.SRUVersion;
+import eu.clarin.sru.fcs.aggregator.UserCredentials;
 import eu.clarin.sru.fcs.aggregator.app.Aggregator;
 import eu.clarin.sru.fcs.aggregator.app.AggregatorConfiguration;
 import eu.clarin.sru.fcs.aggregator.app.AggregatorConfiguration.Params.WeblichtConfig;
@@ -22,6 +24,7 @@ import eu.clarin.sru.fcs.aggregator.search.Exports;
 import io.dropwizard.setup.Environment;
 import java.io.IOException;
 import java.net.URI;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -40,6 +44,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -67,13 +72,15 @@ public class RestService {
 	HttpServletRequest request;
 	@Context
 	ServletContext servletContext;
+	@Context
+    SecurityContext security;
 
         private final Environment environment;
-        
+
         public RestService(Environment environment) {
             this.environment = environment;
         }
-        
+
 	private String toJson(Object o) throws JsonProcessingException {
 		return ow.writeValueAsString(o);
 	}
@@ -340,4 +347,34 @@ public class RestService {
 		return Response.ok(toJson(j)).build();
 	}
 
+	@GET
+    @Path("login")
+    public Response getLogin(@QueryParam("redirect") @DefaultValue("") String redirectUri) throws IOException {
+        final Principal userPrincipal = security.getUserPrincipal();
+
+        final AuthenticationInfo authInfo;
+        if (userPrincipal == null) {
+            authInfo = new AuthenticationInfo(false);
+        } else if (userPrincipal.getName() == null || userPrincipal.getName().isEmpty() || userPrincipal.getName().equals("anonymous")) {
+            authInfo = new AuthenticationInfo(false);
+        } else {
+            final UserCredentials credentials = new UserCredentials(userPrincipal);
+            //final RegistryUser user = userDao.getByPrincipalName(userPrincipal.getName());
+
+            /*final Long id;
+            if (user == null) {
+                logger.trace("Unregistered user {}", userPrincipal.getName());
+                id = null;
+            } else {
+                id = user.getId();
+            }*/
+            authInfo = new AuthenticationInfo(credentials, null, false);
+        }
+
+        if (Strings.isNullOrEmpty(redirectUri)) {
+            return Response.ok(authInfo).build();
+        } else {
+            return Response.seeOther(URI.create(redirectUri)).entity(authInfo).build();
+        }
+    }
 }
