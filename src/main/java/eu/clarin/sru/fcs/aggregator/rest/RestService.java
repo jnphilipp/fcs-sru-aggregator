@@ -350,7 +350,9 @@ public class RestService {
 	@GET
     @Path("login")
     public Response getLogin(@QueryParam("redirect") @DefaultValue("") String redirectUri) throws IOException {
+        log.info("Authentication information requested. Security context {}. Redirect URI: '{}'", security, redirectUri);
         final Principal userPrincipal = security.getUserPrincipal();
+        log.trace("User principal: {}", userPrincipal);
 
         final AuthenticationInfo authInfo;
         if (userPrincipal == null) {

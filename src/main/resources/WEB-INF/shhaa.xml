@@ -39,7 +39,7 @@
 
     <authorization>
         <location target="/admin/*" />
-            <location target="/rest/authentication" methods="POST" />
+            <location target="/rest/login" methods="POST" />
         </authorization>
 
 
